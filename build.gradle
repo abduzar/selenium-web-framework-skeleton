@@ -1,0 +1,81 @@
+plugins {
+    id 'java'
+    id 'io.freefair.lombok' version '5.0.0-rc6'
+    id 'io.qameta.allure' version '2.5'
+}
+
+allure {
+    autoconfigure = true
+    aspectjweaver = true
+    aspectjVersion = "1.9.5"
+    version = '2.7.0'  // Latest Allure Version
+
+    useJUnit5 {
+        version = '2.7.0' // Latest Allure Version
+    }
+}
+
+sourceCompatibility = 1.8
+
+ext {
+    def seleniumVersion = "3.141.59"
+    def seleniumGroup = "org.seleniumhq.selenium"
+    seleniumDependencies = [
+            java   : "$seleniumGroup:selenium-java:$seleniumVersion",
+            support: "$seleniumGroup:selenium-support:$seleniumVersion",
+            server : "$seleniumGroup:selenium-server:$seleniumVersion",
+    ]
+    def slf4jVersion = "1.7.30"
+    def slf4jGroup = "org.slf4j"
+    slf4j = [
+            api    : "$slf4jGroup:slf4j-api:$slf4jVersion",
+            binding: "$slf4jGroup:slf4j-log4j12:$slf4jVersion"
+    ]
+    def junitVersion = "5.6.0"
+    def hamcrestVersion = "2.2"
+    def junitGroup = "org.junit.jupiter"
+    test_engine = [
+            api     : "$junitGroup:junit-jupiter-api:$junitVersion",
+            engine  : "$junitGroup:junit-jupiter-engine:$junitVersion",
+            params  : "$junitGroup:junit-jupiter-params:$junitVersion",
+            hamcrest: "org.hamcrest:hamcrest:$hamcrestVersion"
+    ]
+    tool_belt = [
+            jetbarins_annotations: "org.jetbrains:annotations:19.0.0",
+            shutterbug           : "com.assertthat:selenium-shutterbug:0.9.4",
+            allure_junit5        : "io.qameta.allure:allure-junit5:2.13.5"
+    ]
+}
+
+group 'homebrew.framework'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven {
+        url 'https://plugins.gradle.org/m2/'
+    }
+}
+
+dependencies {
+    implementation seleniumDependencies.values()
+    implementation slf4j.values()
+    testImplementation test_engine.api
+    testRuntimeOnly test_engine.engine
+    testImplementation test_engine.params
+    testImplementation test_engine.hamcrest
+    implementation tool_belt.values()
+}
+
+test {
+    useJUnitPlatform()
+    afterSuite { suite, result ->
+        result.exception?.printStackTrace()
+    }
+}
+
+tasks.withType(Test) {
+    dependsOn cleanTest
+    testLogging.showStandardStreams = true
+}
